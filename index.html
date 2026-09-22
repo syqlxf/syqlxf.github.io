@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>校园好物</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background:#fafafa; color:#111; line-height:1.5; }
+.container { max-width:560px; margin:0 auto; background:#fff; min-height:100vh; }
+.header { padding:36px 24px 28px; border-bottom:1px solid #f0f0f0; }
+.shop-name { font-size:28px; font-weight:700; letter-spacing:-0.5px; }
+.shop-desc { font-size:13px; color:#888; margin-top:8px; }
+.toolbar { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #f0f0f0; background:#fff; position:sticky; top:0; z-index:5; }
+.wx-display { display:flex; align-items:center; gap:8px; font-size:13px; color:#888; }
+.wx-display .num { font-weight:600; color:#111; font-size:14px; }
+.btn-copy { background:#111; color:#fff; border:none; padding:7px 14px; font-size:12px; border-radius:4px; }
+.icons { display:flex; gap:6px; }
+.icon-btn { background:#fff; border:1px solid #e5e5e5; width:34px; height:34px; border-radius:4px; font-size:15px; color:#333; }
+.list { padding:8px 24px 80px; }
+.empty { text-align:center; color:#aaa; padding:80px 0; font-size:14px; }
+.card { display:flex; gap:16px; padding:22px 0; border-bottom:1px solid #f0f0f0; position:relative; }
+.card:last-child { border-bottom:none; }
+.card .ico { font-size:36px; width:48px; text-align:center; flex-shrink:0; line-height:1; padding-top:2px; }
+.card .info { flex:1; min-width:0; }
+.card .name { font-size:16px; font-weight:600; }
+.card .desc { font-size:13px; color:#888; margin-top:5px; word-break:break-all; }
+.card .price { font-size:17px; font-weight:700; margin-top:10px; }
+.card .price.t { color:#888; font-weight:400; font-size:13px; }
+.card .del { position:absolute; top:22px; right:0; background:none; border:none; color:#ccc; font-size:12px; }
+.fab { position:fixed; right:calc(50% - 260px + 20px); bottom:30px; width:54px; height:54px; border-radius:50%; background:#111; color:#fff; font-size:28px; border:none; box-shadow:0 6px 20px rgba(0,0,0,.2); z-index:4; }
+@media (max-width:600px){.fab{right:20px}}
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); padding:20px; overflow:auto; z-index:50; align-items:flex-start; justify-content:center; padding-top:70px; }
+.modal.show { display:flex; }
+.modal-box { background:#fff; border-radius:8px; padding:24px; width:100%; max-width:440px; }
+.modal-box h3 { font-size:18px; font-weight:700; margin-bottom:20px; }
+.field { margin-bottom:16px; }
+.field label { display:block; font-size:12px; color:#888; margin-bottom:6px; }
+.field input, .field textarea { width:100%; border:1px solid #e5e5e5; border-radius:4px; padding:11px 12px; font-size:15px; font-family:inherit; outline:none; background:#fff; }
+.field input:focus, .field textarea:focus { border-color:#111; }
+.modal-actions { display:flex; gap:10px; margin-top:8px; }
+.btn { flex:1; padding:12px; border-radius:4px; border:none; font-size:14px; font-weight:500; }
+.btn-ghost { background:#f5f5f5; color:#333; }
+.btn-solid { background:#111; color:#fff; }
+.btn-danger { background:#fff; color:#c00; border:1px solid #eee; margin-top:14px; }
+.share-code { background:#f7f7f7; padding:14px; border-radius:4px; font-family:Menlo,Consolas,monospace; font-size:12px; word-break:break-all; max-height:140px; overflow:auto; margin:10px 0; line-height:1.5; }
+.toast { position:fixed; bottom:110px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.85); color:#fff; padding:10px 18px; border-radius:6px; font-size:13px; display:none; z-index:60; }
+.tab-row { display:flex; border-bottom:1px solid #eee; margin-bottom:18px; }
+.tab-row .tab { flex:1; text-align:center; padding:10px; font-size:14px; color:#888; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+.tab-row .tab.active { color:#111; border-color:#111; font-weight:600; }
+.hint { font-size:12px; color:#888; margin-bottom:8px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="shop-name" id="shopName">校园好物</div>
+    <div class="shop-desc" id="shopDesc">校园二手 / 好物分享 · 看中加微信直接成交</div>
+  </div>
+  <div class="toolbar">
+    <div class="wx-display">
+      <span>微信</span>
+      <span class="num" id="wxnum">16673145828</span>
+      <button class="btn-copy" onclick="copyWx()">复制</button>
+    </div>
+    <div class="icons">
+      <button class="icon-btn" onclick="openShare()" title="分享店铺">↑</button>
+      <button class="icon-btn" onclick="openSettings()" title="店铺设置">⚙</button>
+    </div>
+  </div>
+  <div class="list" id="list"></div>
+</div>
+<button class="fab" onclick="openAdd()">+</button>
+
+<!-- 上架弹窗 -->
+<div class="modal" id="m-add" onclick="if(event.target===this)closeM('m-add')">
+  <div class="modal-box">
+    <h3>上架商品</h3>
+    <div class="field"><label>图标（emoji）</label><input id="f_ico" value="📦" placeholder="如 🧴 👕 📚 🚲"></div>
+    <div class="field"><label>名称</label><input id="f_name" placeholder="如 冰袖防晒"></div>
+    <div class="field"><label>价格</label><input id="f_price" placeholder="如 9.9，不填默认面议"></div>
+    <div class="field"><label>描述</label><textarea id="f_desc" rows="3" placeholder="如 全新未拆 / 宿舍自用九成新"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeM('m-add')">取消</button>
+      <button class="btn btn-solid" onclick="doAdd()">上架</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="modal" id="m-set" onclick="if(event.target===this)closeM('m-set')">
+  <div class="modal-box">
+    <h3>店铺设置</h3>
+    <div class="field"><label>店铺名字</label><input id="s_name" placeholder="如 李同学的校园杂货铺"></div>
+    <div class="field"><label>店铺简介</label><textarea id="s_desc" rows="2" placeholder="如 校园二手 / 一件包邮"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeM('m-set')">取消</button>
+      <button class="btn btn-solid" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 分享弹窗 -->
+<div class="modal" id="m-share" onclick="if(event.target===this)closeM('m-share')">
+  <div class="modal-box">
+    <h3>分享店铺</h3>
+    <div class="tab-row">
+      <div class="tab active" data-t="out" onclick="switchShare('out')">生成我的码</div>
+      <div class="tab" data-t="in" onclick="switchShare('in')">导入同学的码</div>
+    </div>
+    <div id="share-out">
+      <div class="hint">把这串码发给同学，他粘进"导入"就能看到你的全部商品和店铺名：</div>
+      <div class="share-code" id="shareCode"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeM('m-share')">关闭</button>
+        <button class="btn btn-solid" onclick="copyShare()">复制分享码</button>
+      </div>
+    </div>
+    <div id="share-in" style="display:none">
+      <div class="hint">把同学发你的分享码粘到下面，点导入：</div>
+      <textarea id="shareIn" rows="4" style="width:100%;border:1px solid #e5e5e5;border-radius:4px;padding:12px;font-family:Menlo,Consolas,monospace;font-size:12px;outline:none"></textarea>
+      <div class="modal-actions" style="margin-top:14px">
+        <button class="btn btn-ghost" onclick="closeM('m-share')">取消</button>
+        <button class="btn btn-solid" onclick="doImport()">导入</button>
+      </div>
+      <button class="btn btn-danger" onclick="resetAll()">⚠ 清空我自己的全部数据</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const K_GOODS='campus_goods_v2';
+const K_SET='campus_settings_v2';
+let goods=[], settings={name:'校园好物',desc:'校园二手 / 好物分享 · 看中加微信直接成交'};
+
+function load(){
+  try{goods=JSON.parse(localStorage.getItem(K_GOODS)||'[]')}catch(e){goods=[]}
+  try{const s=JSON.parse(localStorage.getItem(K_SET)||'null');if(s&&s.name)settings=s}catch(e){}
+  if(!goods.length){
+    goods=[
+      {ico:'🧴',name:'冰袖防晒',price:'9.9',desc:'UPF50+ 全新未拆'},
+      {ico:'👒',name:'防晒帽',price:'25.9',desc:'大檐透气 多色可选'},
+      {ico:'📚',name:'金融期末笔记',price:'19.9',desc:'考点全覆盖 电子版'}
+    ];
+    saveGoods();
+  }
+  renderAll();
+}
+function saveGoods(){try{localStorage.setItem(K_GOODS,JSON.stringify(goods))}catch(e){}}
+function saveSet(){try{localStorage.setItem(K_SET,JSON.stringify(settings))}catch(e){}}
+function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderAll(){
+  document.getElementById('shopName').textContent=settings.name||'校园好物';
+  document.getElementById('shopDesc').textContent=settings.desc||'';
+  const el=document.getElementById('list');
+  if(!goods.length){el.innerHTML='<div class="empty">还没有商品，点 + 上架</div>';return}
+  el.innerHTML=goods.map((g,i)=>`
+    <div class="card">
+      <div class="ico">${g.ico||'📦'}</div>
+      <div class="info">
+        <div class="name">${esc(g.name)}</div>
+        <div class="desc">${esc(g.desc||'')}</div>
+        <div class="price ${(!g.price||g.price==='面议')?'t':''}">${(!g.price||g.price==='面议')?'面议':'¥'+esc(g.price)}</div>
+      </div>
+      <button class="del" onclick="delItem(${i})">删除</button>
+    </div>`).join('');
+}
+function openAdd(){document.getElementById('m-add').classList.add('show')}
+function closeM(id){document.getElementById(id).classList.remove('show')}
+function openSettings(){
+  document.getElementById('s_name').value=settings.name||'';
+  document.getElementById('s_desc').value=settings.desc||'';
+  document.getElementById('m-set').classList.add('show');
+}
+function saveSettings(){
+  const n=document.getElementById('s_name').value.trim();
+  const d=document.getElementById('s_desc').value.trim();
+  if(n)settings.name=n;
+  if(d)settings.desc=d; else settings.desc='';
+  saveSet(); renderAll(); closeM('m-set'); toast('已保存 ✓');
+}
+function openShare(){
+  document.getElementById('shareIn').value='';
+  const code=btoa(unescape(encodeURIComponent(JSON.stringify({g:goods,s:settings}))));
+  document.getElementById('shareCode').textContent=code;
+  switchShare('out');
+  document.getElementById('m-share').classList.add('show');
+}
+function switchShare(t){
+  document.querySelectorAll('#m-share .tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));
+  document.getElementById('share-out').style.display=t==='out'?'block':'none';
+  document.getElementById('share-in').style.display=t==='in'?'block':'none';
+}
+function copyShare(){
+  const c=document.getElementById('shareCode').textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(c).then(()=>toast('分享码已复制 ✓')).catch(()=>fallbackCopy(c));
+  } else { fallbackCopy(c); }
+}
+function fallbackCopy(t){
+  const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast('分享码已复制 ✓')}catch(e){toast('请长按复制')}
+  document.body.removeChild(ta);
+}
+function doImport(){
+  const c=document.getElementById('shareIn').value.trim();
+  if(!c){toast('请粘贴分享码');return}
+  try{
+    const d=JSON.parse(decodeURIComponent(escape(atob(c))));
+    if(d.g&&Array.isArray(d.g)){goods=d.g;saveGoods()}
+    if(d.s&&d.s.name){settings=d.s;saveSet()}
+    renderAll(); closeM('m-share'); toast('导入成功 ✓');
+  } catch(e){ toast('分享码无效 ✗'); }
+}
+function doAdd(){
+  const ico=document.getElementById('f_ico').value.trim()||'📦';
+  const name=document.getElementById('f_name').value.trim();
+  const price=document.getElementById('f_price').value.trim();
+  const desc=document.getElementById('f_desc').value.trim();
+  if(!name){toast('请填名称');return}
+  goods.unshift({ico,name,price:price||'面议',desc});
+  saveGoods(); renderAll(); closeM('m-add');
+  document.getElementById('f_name').value='';
+  document.getElementById('f_price').value='';
+  document.getElementById('f_desc').value='';
+  toast('已上架 ✓');
+}
+function delItem(i){if(confirm('删除这个商品？')){goods.splice(i,1);saveGoods();renderAll()}}
+function copyWx(){
+  const t=document.getElementById('wxnum').textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast('微信号已复制 ✓')).catch(()=>fallbackCopy(t));
+  } else { fallbackCopy(t); }
+}
+function resetAll(){
+  if(!confirm('确定要清空你店铺的所有商品和设置？'))return;
+  goods=[]; settings={name:'校园好物',desc:'校园二手 / 好物分享 · 看中加微信直接成交'};
+  saveGoods(); saveSet(); renderAll(); closeM('m-share'); toast('已清空');
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',1600)}
+load();
+</script>
+</body>
+</html>
